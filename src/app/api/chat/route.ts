@@ -7,7 +7,7 @@ interface RateLimitTracker {
 }
 const rateLimitMap = new Map<string, RateLimitTracker>();
 const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
-const MAX_REQUESTS_PER_WINDOW = 30; // 30 requests per minute
+const MAX_REQUESTS_PER_WINDOW = 60; // 60 requests per minute
 
 function isRateLimited(ip: string): boolean {
   const now = Date.now();
@@ -58,14 +58,113 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // --- AZURE INTEGRATION (PRIMARY ROUTE) ---
+    const azureApiKey = process.env.AZURE_API_KEY;
+    const azureProjectEndpoint = process.env.AZURE_PROJECT_ENDPOINT;
+    const azureOpenAiEndpoint = process.env.AZURE_OPENAI_ENDPOINT;
+
+    if (azureApiKey && azureOpenAiEndpoint) {
+      let systemPrompt = "Você é o Orion AI.";
+      let temperature = 1;
+      let top_p = 1;
+      let modelName = "gpt-4.1";
+
+      // Dynamically fetch Azure Agent settings if endpoint is configured
+      if (azureProjectEndpoint) {
+        try {
+          // 1. Try to fetch details for 'agenteton'
+          const agentUrl = `${azureProjectEndpoint}/agents/agenteton?api-version=2025-05-15-preview`;
+          const agentRes = await fetch(agentUrl, {
+            headers: { "api-key": azureApiKey },
+            signal: AbortSignal.timeout(3000),
+          });
+
+          let agentData = null;
+          if (agentRes.ok) {
+            agentData = await agentRes.json();
+          } else {
+            // 2. If 'agenteton' isn't direct/valid, list and fetch first agent
+            const listUrl = `${azureProjectEndpoint}/agents?api-version=2025-05-15-preview`;
+            const listRes = await fetch(listUrl, {
+              headers: { "api-key": azureApiKey },
+              signal: AbortSignal.timeout(3000),
+            });
+            if (listRes.ok) {
+              const listData = await listRes.json();
+              const firstAgent = listData?.data?.[0];
+              if (firstAgent) {
+                const detailUrl = `${azureProjectEndpoint}/agents/${firstAgent.id}?api-version=2025-05-15-preview`;
+                const detailRes = await fetch(detailUrl, {
+                  headers: { "api-key": azureApiKey },
+                  signal: AbortSignal.timeout(3000),
+                });
+                if (detailRes.ok) {
+                  agentData = await detailRes.json();
+                }
+              }
+            }
+          }
+
+          // Extract agent definition settings
+          const def = agentData?.versions?.latest?.definition;
+          if (def) {
+            if (def.instructions) systemPrompt = def.instructions;
+            if (typeof def.temperature === "number") temperature = def.temperature;
+            if (typeof def.top_p === "number") top_p = def.top_p;
+            if (def.model) modelName = def.model;
+          }
+        } catch (err) {
+          console.error("Error fetching Azure Agent configuration:", err);
+        }
+      }
+
+      // Prepare payload for Azure OpenAI completion
+      const formattedMessages = [
+        { role: "system", content: systemPrompt },
+        ...messages.map((m: any) => ({
+          role: m.role,
+          content: sanitizeText(m.content),
+        })),
+      ];
+
+      const response = await fetch(`${azureOpenAiEndpoint}/chat/completions`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "api-key": azureApiKey,
+        },
+        body: JSON.stringify({
+          model: modelName,
+          messages: formattedMessages,
+          stream: true,
+          temperature: temperature,
+          top_p: top_p,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Azure OpenAI Error:", errorText);
+        throw new Error("Erro na comunicação com a API do Azure OpenAI");
+      }
+
+      // Stream the response directly to the client
+      return new NextResponse(response.body, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
+    }
+
+    // --- STANDARD OPENAI FALLBACK ROUTE ---
     const lastMessage = messages[messages.length - 1];
     const userContent = sanitizeText(lastMessage.content);
     const model = settings?.model || "mock-orion";
     const apiKey = settings?.apiKey || process.env.OPENAI_API_KEY;
 
-    // Check if we need to call real OpenAI API
     if (model !== "mock-orion" && apiKey) {
-      // Format messages for OpenAI API
       const formattedMessages = [
         { role: "system", content: settings?.systemPrompt || "Você é o Orion AI." },
         ...messages.map((m: any) => ({
@@ -93,7 +192,6 @@ export async function POST(req: NextRequest) {
         throw new Error(errorData.error?.message || "Erro na OpenAI API");
       }
 
-      // Return stream from OpenAI back to our frontend
       return new NextResponse(response.body, {
         headers: {
           "Content-Type": "text/event-stream",
@@ -103,182 +201,34 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // --- FALLBACK MOCK AI GENERATION SERVICE (STREAMING) ---
-    // Generate responses depending on keywords to simulate advanced intelligence
+    // --- SIMULATED MOCK AI FALLBACK ROUTE ---
     let mockResponse = "";
     const lowerContent = userContent.toLowerCase();
 
-    // 1. Programming assistant logic
     if (
       lowerContent.includes("código") ||
       lowerContent.includes("bug") ||
       lowerContent.includes("react") ||
-      lowerContent.includes("typescript") ||
-      lowerContent.includes("javascript") ||
-      lowerContent.includes("função") ||
-      lowerContent.includes("css") ||
-      lowerContent.includes("html")
+      lowerContent.includes("typescript")
     ) {
-      mockResponse = `Aqui está uma explicação detalhada e a solução para sua questão de programação:
-
-### Exemplo de Solução
-Para criar ou resolver seu problema, podemos seguir um design robusto. Aqui está um exemplo de código funcional:
-
+      mockResponse = `Aqui está um exemplo de código funcional:
 \`\`\`typescript
-// Hook customizado em React para gerenciar requisições assíncronas
-import { useState, useEffect, useCallback } from "react";
-
-export function useFetchData<T>(url: string) {
-  const [data, setData] = useState<T | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchData = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(\`Erro: \${response.statusText} (\${response.status})\`);
-      }
-      const json = await response.json();
-      setData(json);
-    } catch (err: any) {
-      setError(err.message || "Algo deu errado");
-    } finally {
-      setLoading(false);
-    }
-  }, [url]);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
-
-  return { data, loading, error, refetch: fetchData };
-}
-\`\`\`
-
-### Como isso funciona:
-1. **\`useState\`**: Gerencia os estados de \`data\`, \`loading\` e \`error\` de forma independente.
-2. **\`useCallback\`**: Memoriza a função de busca para evitar renderizações desnecessárias.
-3. **Tratamento de Erros**: Captura exceções da requisição e atualiza o estado correspondente.
-
-Espero que este código ajude no seu projeto! Deixe-me saber se precisar de alterações ou explicações extras.`;
-    }
-    // 2. Study assistant logic
-    else if (
-      lowerContent.includes("estudo") ||
-      lowerContent.includes("resumo") ||
-      lowerContent.includes("explica") ||
-      lowerContent.includes("história") ||
-      lowerContent.includes("guerra") ||
-      lowerContent.includes("exercício")
-    ) {
-      mockResponse = `# Resumo Educacional e Exercícios
-
-Entendido! Aqui está um resumo didático sobre o tema solicitado, seguido de exercícios práticos para fixar o conhecimento:
-
-### Resumo: Segunda Guerra Mundial (Visão Geral)
-A Segunda Guerra Mundial (1939–1945) foi um conflito militar global que envolveu a maioria das nações do mundo, organizadas em duas alianças militares opostas: os **Aliados** (liderados por Reino Unido, União Soviética e Estados Unidos) e o **Eixo** (liderado por Alemanha, Itália e Japão). O estopim do conflito foi a invasão da Polônia pela Alemanha nazista em 1º de setembro de 1939. O fim das hostilidades ocorreu em 1945 com a rendição incondicional da Alemanha e o bombardeio atômico sobre Hiroshima e Nagasaki.
-
----
-
-### Exercícios de Fixação
-
-1. **Qual foi o evento considerado o estopim da Segunda Guerra Mundial em 1939?**
-   * *R: A invasão da Polônia por forças alemãs em setembro de 1939.*
-
-2. **Quais eram as duas grandes alianças militares do conflito?**
-   * *R: Aliados (EUA, URSS, Reino Unido, etc.) e Eixo (Alemanha, Itália e Japão).*
-
-3. **Explique sucintamente o desfecho militar no teatro do Pacífico.**
-   * *R: Ocorreu após o lançamento das bombas atômicas americanas em Hiroshima e Nagasaki em agosto de 1945, forçando o Japão a assinar a rendição incondicional.*
-
-*Dica: Estude os tratados pós-guerra para entender a divisão geopolítica que deu início à Guerra Fria!*`;
-    }
-    // 3. Content production logic
-    else if (
-      lowerContent.includes("artigo") ||
-      lowerContent.includes("redação") ||
-      lowerContent.includes("post") ||
-      lowerContent.includes("seo") ||
-      lowerContent.includes("linkedin") ||
-      lowerContent.includes("email")
-    ) {
-      mockResponse = `Aqui está o rascunho de texto profissional otimizado para o seu canal de comunicação:
-
-### 🚀 Novidade no Ar: Conheça o Orion AI!
-
-Você já sentiu que o dia precisava ter mais de 24 horas para dar conta de tudo? Nós também. É por isso que criamos o **Orion AI**, um assistente virtual conversacional projetado para maximizar sua eficiência!
-
-Seja você um programador em busca de refatoração rápida, um estudante querendo resumos claros, ou um criador de conteúdo estruturando seu próximo artigo, o Orion AI se adapta às suas necessidades.
-
-**Principais capacidades:**
-* 💻 **Coding Helper:** Suporte nativo para TypeScript, React, Python e SQL.
-* 📚 **Study Center:** Criação de cronogramas e correção de exercícios.
-* ✍️ **SEO Copywriting:** Textos engajadores estruturados para conversão.
-* ⚙️ **Modo Escuro & Fluido:** Interface ultrarrápida hospedada na Vercel.
-
-Experimente agora mesmo e eleve sua produtividade a um novo patamar! 💡
-
-*#InteligenciaArtificial #Produtividade #Tech #OrionAI #React #NextJS*`;
-    }
-    // 4. Productivity and planning logic
-    else if (
-      lowerContent.includes("tarefa") ||
-      lowerContent.includes("cronograma") ||
-      lowerContent.includes("planejamento") ||
-      lowerContent.includes("todo") ||
-      lowerContent.includes("projeto")
-    ) {
-      mockResponse = `Aqui está uma sugestão de cronograma e lista de tarefas estruturada para organizar seu projeto:
-
-### 📅 Planejamento de Desenvolvimento (Sprint Semanal)
-
-#### **Fase 1: Preparação e Inicialização**
-- [x] Configurar ambiente Next.js 15 e Tailwind v4.
-- [x] Conectar repositório GitHub e integrar com a Vercel.
-- [x] Definir tokens de cores globais.
-
-#### **Fase 2: Core Frontend (UI/UX)**
-- [ ] Desenvolver o Sidebar History de sessões.
-- [ ] Criar componentes de entrada de mensagens com área elástica.
-- [ ] Implementar interruptor de tema (Claro / Escuro / Sistema).
-
-#### **Fase 3: API & Integração de IA**
-- [ ] Estruturar a API route para lidar com streamings SSE.
-- [ ] Conectar chaves de API com validação e segurança contra spam.
-
-#### **Fase 4: Banco de Dados & Deploy**
-- [ ] Criar tabelas no PostgreSQL/Supabase.
-- [ ] Rodar testes de build de produção e lançar na Vercel.
-
-*Recomendação: Utilize ferramentas como Trello ou Notion para rastrear o progresso destas tarefas visualmente.*`;
-    }
-    // 5. Default generic chat response
-    else {
+const greeting = (name: string): string => \`Olá, \${name}!\`;
+console.log(greeting("Orion"));
+\`\`\``;
+    } else {
       mockResponse = `Olá! Sou o **Orion AI**, seu assistente virtual. Fico feliz em conversar com você!
-
-Como sou um agente conversacional avançado, posso atuar em diferentes frentes para te ajudar:
-1. 📚 **Estudos:** Posso explicar teorias, gerar questionários ou criar resumos.
-2. 💻 **Programação:** Escrevo códigos em React, TypeScript, Python, SQL, etc., e ajudo a resolver bugs.
-3. ✍️ **Textos:** Crio posts, e-mails comerciais ou artigos otimizados para mecanismos de busca (SEO).
-4. ⏱️ **Produtividade:** Ajudo a desenhar planejamentos, agendas ou planos de negócios.
-
-Se sua pergunta for sobre algum desses temas, sinta-se à vontade para perguntar de forma mais específica. Em que posso te ajudar hoje?`;
+Como posso te ajudar hoje?`;
     }
 
-    // Simulate streaming by outputting chunks back to the client
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
       async start(controller) {
-        // Splitting into words/small chunks to simulate typing speed
         const chunks = mockResponse.split(" ");
         for (let i = 0; i < chunks.length; i++) {
           const chunk = chunks[i] + (i === chunks.length - 1 ? "" : " ");
           const payload = JSON.stringify({ text: chunk });
           controller.enqueue(encoder.encode(`data: ${payload}\n\n`));
-          // Wait 30ms between chunks for typing feedback feel
           await new Promise((resolve) => setTimeout(resolve, 30));
         }
         controller.enqueue(encoder.encode("data: [DONE]\n\n"));
