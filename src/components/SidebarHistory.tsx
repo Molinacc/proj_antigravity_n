@@ -5,7 +5,7 @@ import { useChat, Conversation } from "@/context/ChatContext";
 import { UserProfile } from "./UserProfile";
 import {
   Plus, MessageSquare, Trash2, Library, BookOpen,
-  Code, PenTool, ClipboardList, X, Menu
+  Code, PenTool, ClipboardList, X
 } from "lucide-react";
 
 interface SidebarHistoryProps {
@@ -16,13 +16,13 @@ interface SidebarHistoryProps {
 
 type Category = Conversation["category"];
 
-const CATEGORIES: { key: Category; label: string; icon: React.ReactNode; color: string }[] = [
-  { key: "all",          label: "Todos",        icon: <MessageSquare size={14} />, color: "#94a3b8" },
-  { key: "atendimento",  label: "Atendimento",  icon: <Library size={14} />,       color: "#60a5fa" },
-  { key: "estudos",      label: "Estudos",      icon: <BookOpen size={14} />,      color: "#fbbf24" },
-  { key: "programacao",  label: "Programação",  icon: <Code size={14} />,          color: "#34d399" },
-  { key: "conteudo",     label: "Conteúdo",     icon: <PenTool size={14} />,       color: "#f472b6" },
-  { key: "produtividade",label: "Produtividade",icon: <ClipboardList size={14} />, color: "#818cf8" },
+const CATEGORIES: { key: Category; label: string; icon: React.ReactNode }[] = [
+  { key: "all",          label: "Todos",        icon: <MessageSquare size={14} /> },
+  { key: "atendimento",  label: "Atendimento",  icon: <Library size={14} /> },
+  { key: "estudos",      label: "Estudos",      icon: <BookOpen size={14} /> },
+  { key: "programacao",  label: "Programação",  icon: <Code size={14} /> },
+  { key: "conteudo",     label: "Conteúdo",     icon: <PenTool size={14} /> },
+  { key: "produtividade",label: "Produtividade",icon: <ClipboardList size={14} /> },
 ];
 
 export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
@@ -73,22 +73,20 @@ export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
           alignItems: "center",
           justifyContent: "space-between",
           padding: "0 1rem",
-          height: "56px",
-          minHeight: "56px",
-          borderBottom: "1px solid var(--sidebar-border)",
+          height: "54px",
+          minHeight: "54px",
+          borderBottom: "1px solid var(--border)",
           flexShrink: 0,
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <span style={{
-              width: "10px", height: "10px", borderRadius: "50%",
-              background: "linear-gradient(135deg, var(--primary), var(--secondary))",
+              width: "8px", height: "8px", borderRadius: "50%",
+              background: "var(--primary)",
               display: "inline-block",
             }} />
             <span style={{
-              fontWeight: 700, fontSize: "1rem",
-              background: "linear-gradient(90deg, var(--primary), var(--secondary))",
-              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
+              fontWeight: 700, fontSize: "0.95rem",
+              color: "var(--text)",
             }}>
               Orion AI
             </span>
@@ -97,12 +95,12 @@ export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
             onClick={() => setIsSidebarOpen(false)}
             style={{
               display: "none",
-              padding: "0.375rem",
-              borderRadius: "0.5rem",
+              padding: "0.35rem",
+              borderRadius: "4px",
               border: "none",
               background: "transparent",
               cursor: "pointer",
-              color: "var(--foreground)",
+              color: "var(--text-muted)",
             }}
             className="sidebar-close-btn"
             aria-label="Fechar menu"
@@ -112,32 +110,31 @@ export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
         </div>
 
         {/* New chat button */}
-        <div style={{ padding: "0.875rem 1rem 0.5rem", flexShrink: 0 }}>
+        <div style={{ padding: "0.75rem 0.875rem 0.5rem", flexShrink: 0 }}>
           <button
             onClick={handleNew}
             style={{
               display: "flex", alignItems: "center", justifyContent: "center",
-              gap: "0.5rem", width: "100%", padding: "0.625rem 1rem",
+              gap: "0.5rem", width: "100%", padding: "0.5rem 1rem",
               background: "var(--primary)", color: "#fff",
-              border: "none", borderRadius: "0.75rem",
-              fontWeight: 600, fontSize: "0.875rem", cursor: "pointer",
-              transition: "background 0.2s, transform 0.15s",
-              boxShadow: "0 2px 12px rgba(99,102,241,0.25)",
+              border: "none", borderRadius: "6px",
+              fontWeight: 600, fontSize: "0.85rem", cursor: "pointer",
+              transition: "background 0.15s",
             }}
             onMouseEnter={e => (e.currentTarget.style.background = "var(--primary-hover)")}
             onMouseLeave={e => (e.currentTarget.style.background = "var(--primary)")}
           >
-            <Plus size={16} />
+            <Plus size={15} />
             Nova Conversa
           </button>
         </div>
 
         {/* Category filters */}
-        <div style={{ padding: "0 1rem 0.625rem", flexShrink: 0 }}>
-          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>
-            Categorias
+        <div style={{ padding: "0.25rem 0.875rem 0.5rem", flexShrink: 0 }}>
+          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.375rem" }}>
+            Filtros
           </p>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.375rem" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.25rem" }}>
             {CATEGORIES.map(cat => (
               <button
                 key={cat.key}
@@ -145,15 +142,15 @@ export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
                 title={cat.label}
                 style={{
                   display: "flex", flexDirection: "column", alignItems: "center",
-                  padding: "0.5rem 0.25rem", borderRadius: "0.625rem",
-                  border: selectedFilter === cat.key ? "1px solid var(--primary)" : "1px solid transparent",
-                  background: selectedFilter === cat.key ? "rgba(99,102,241,0.1)" : "transparent",
-                  cursor: "pointer", transition: "all 0.15s",
-                  color: selectedFilter === cat.key ? "var(--primary)" : "#94a3b8",
-                  gap: "0.25rem",
+                  padding: "0.4rem 0.2rem", borderRadius: "4px",
+                  border: "1px solid " + (selectedFilter === cat.key ? "var(--primary)" : "var(--border)"),
+                  background: selectedFilter === cat.key ? "var(--primary)" : "var(--bg)",
+                  cursor: "pointer", transition: "all 0.1s",
+                  color: selectedFilter === cat.key ? "#ffffff" : "var(--text-muted)",
+                  gap: "0.15rem",
                 }}
               >
-                <span style={{ color: cat.color }}>{cat.icon}</span>
+                <span style={{ display: "flex", alignItems: "center" }}>{cat.icon}</span>
                 <span style={{ fontSize: "0.6rem", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{cat.label}</span>
               </button>
             ))}
@@ -161,13 +158,13 @@ export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
         </div>
 
         {/* Conversation list */}
-        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "0 0.75rem" }}>
-          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem", paddingLeft: "0.25rem" }}>
-            Histórico
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "0.25rem 0.625rem" }}>
+          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "var(--text-muted)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.375rem", paddingLeft: "0.25rem" }}>
+            Conversas
           </p>
           {filtered.length === 0 ? (
-            <div style={{ textAlign: "center", padding: "2rem 0", fontSize: "0.75rem", color: "#94a3b8" }}>
-              Nenhuma conversa ainda.
+            <div style={{ textAlign: "center", padding: "1.5rem 0", fontSize: "0.75rem", color: "var(--text-muted)" }}>
+              Sem histórico
             </div>
           ) : (
             filtered.map(conv => {
@@ -179,20 +176,21 @@ export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
                   onClick={() => handleSelect(conv.id)}
                   style={{
                     display: "flex", alignItems: "center", gap: "0.5rem",
-                    padding: "0.5rem 0.625rem", borderRadius: "0.625rem",
-                    cursor: "pointer", marginBottom: "0.25rem",
-                    background: isActive ? "rgba(99,102,241,0.12)" : "transparent",
-                    transition: "background 0.15s",
+                    padding: "0.45rem 0.5rem", borderRadius: "4px",
+                    cursor: "pointer", marginBottom: "0.15rem",
+                    background: isActive ? "var(--bg)" : "transparent",
+                    border: isActive ? "1px solid var(--border)" : "1px solid transparent",
+                    transition: "background 0.1s",
                     position: "relative",
                   }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(148,163,184,0.08)"; }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "var(--bg-subtle)"; }}
                   onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
                   className="conv-item"
                 >
-                  <span style={{ color: cat.color, flexShrink: 0 }}>{cat.icon}</span>
+                  <span style={{ color: "var(--text-muted)", flexShrink: 0 }}>{cat.icon}</span>
                   <span style={{
                     flex: 1, fontSize: "0.8rem", fontWeight: isActive ? 600 : 400,
-                    color: isActive ? "var(--primary)" : "var(--foreground)",
+                    color: isActive ? "var(--primary)" : "var(--text)",
                     overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
                   }}>
                     {conv.title}
@@ -202,12 +200,12 @@ export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
                     title="Excluir"
                     style={{
                       background: "none", border: "none", cursor: "pointer",
-                      color: "#94a3b8", padding: "0.2rem", borderRadius: "0.375rem",
-                      flexShrink: 0, opacity: 0, transition: "opacity 0.15s, color 0.15s",
+                      color: "var(--text-muted)", padding: "0.15rem", borderRadius: "3px",
+                      flexShrink: 0, opacity: 0, transition: "opacity 0.1s, color 0.1s",
                     }}
                     className="delete-btn"
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={12} />
                   </button>
                 </div>
               );
@@ -217,8 +215,8 @@ export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
 
         {/* User profile footer */}
         <div style={{
-          padding: "0.75rem 1rem",
-          borderTop: "1px solid var(--sidebar-border)",
+          padding: "0.625rem 0.875rem",
+          borderTop: "1px solid var(--border)",
           flexShrink: 0,
         }}>
           <UserProfile onOpenSettings={onOpenSettings} />

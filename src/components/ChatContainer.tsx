@@ -15,25 +15,25 @@ const QUICK_CARDS = [
   {
     title: "Assistente de Estudos",
     desc: "Resumos, exercícios e planos de estudo.",
-    icon: <BookOpen size={18} style={{ color: "#fbbf24" }} />,
+    icon: <BookOpen size={16} style={{ color: "#d97706" }} />,
     prompt: "Me dê um resumo sobre a Segunda Guerra Mundial e crie 3 exercícios para fixação.",
   },
   {
     title: "Assistente de Programação",
-    desc: "Gere, explique ou corrija código TypeScript, React, Python.",
-    icon: <Code size={18} style={{ color: "#34d399" }} />,
+    desc: "Gere, explique ou corrija código.",
+    icon: <Code size={16} style={{ color: "#059669" }} />,
     prompt: "Como crio um Hook customizado em React para buscar dados de uma API com fetch, gerenciando loading e erro?",
   },
   {
     title: "Produção de Conteúdo",
-    desc: "Posts, artigos, e-mails e textos otimizados para SEO.",
-    icon: <PenTool size={18} style={{ color: "#f472b6" }} />,
+    desc: "Posts, artigos, e-mails e textos.",
+    icon: <PenTool size={16} style={{ color: "#db2777" }} />,
     prompt: "Escreva um post curto para LinkedIn divulgando o lançamento do Orion AI com foco em produtividade.",
   },
   {
     title: "Planejamento e Tarefas",
-    desc: "Cronogramas, listas de tarefas e gestão de projetos.",
-    icon: <ClipboardList size={18} style={{ color: "#818cf8" }} />,
+    desc: "Cronogramas, listas e projetos.",
+    icon: <ClipboardList size={16} style={{ color: "#4f46e5" }} />,
     prompt: "Crie uma lista de tarefas semanais para o desenvolvimento de um aplicativo mobile com React Native.",
   },
 ];
@@ -50,24 +50,20 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onOpenSidebar }) =
 
   return (
     <main className="chat-main">
-      {/* Ambient glows - decorative only */}
-      <div className="ambient-glow" style={{ background: "var(--primary)", top: "-60px", right: "-60px" }} />
-      <div className="ambient-glow" style={{ background: "var(--secondary)", bottom: "0px", left: "-60px" }} />
-
       {/* Header */}
       <header className="chat-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.625rem", minWidth: 0 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", minWidth: 0 }}>
           {/* Mobile menu toggle */}
           <button
             onClick={onOpenSidebar}
             style={{
               display: "none",
               padding: "0.375rem",
-              borderRadius: "0.5rem",
+              borderRadius: "0.375rem",
               border: "none",
               background: "transparent",
               cursor: "pointer",
-              color: "var(--foreground)",
+              color: "var(--text)",
               flexShrink: 0,
             }}
             className="mobile-menu-btn"
@@ -77,29 +73,29 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onOpenSidebar }) =
           </button>
 
           <div style={{
-            width: "28px", height: "28px", borderRadius: "8px", flexShrink: 0,
-            background: "linear-gradient(135deg, var(--primary), #a855f7)",
+            width: "24px", height: "24px", borderRadius: "4px", flexShrink: 0,
+            background: "var(--primary)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <Sparkles size={14} color="#fff" />
+            <Sparkles size={12} color="#fff" />
           </div>
 
           <div style={{ minWidth: 0 }}>
             <p style={{
               fontWeight: 600, fontSize: "0.875rem",
               overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-              color: "var(--foreground)",
+              color: "var(--text)",
             }}>
-              {activeConversation ? activeConversation.title : "Nova Conversa"}
+              {activeConversation ? activeConversation.title : "Orion AI"}
             </p>
           </div>
 
           {activeConversation?.category && activeConversation.category !== "all" && (
             <span style={{
-              fontSize: "0.65rem", fontWeight: 700, textTransform: "uppercase",
-              padding: "0.2rem 0.5rem", borderRadius: "9999px",
-              background: "rgba(99,102,241,0.12)", color: "var(--primary)",
-              border: "1px solid rgba(99,102,241,0.2)", flexShrink: 0,
+              fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase",
+              padding: "0.15rem 0.4rem", borderRadius: "4px",
+              background: "var(--bg-subtle)", color: "var(--text-muted)",
+              border: "1px solid var(--border)", flexShrink: 0,
             }}>
               {activeConversation.category}
             </span>
@@ -109,12 +105,11 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onOpenSidebar }) =
         {/* Status indicator */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0 }}>
           <span style={{
-            width: "7px", height: "7px", borderRadius: "50%",
+            width: "6px", height: "6px", borderRadius: "50%",
             background: "#10b981", display: "inline-block",
-            boxShadow: "0 0 6px #10b981",
           }} />
-          <span style={{ fontSize: "0.75rem", color: "#94a3b8", whiteSpace: "nowrap" }} className="status-text">
-            Orion Online
+          <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", whiteSpace: "nowrap" }} className="status-text">
+            Online
           </span>
         </div>
       </header>
@@ -124,27 +119,26 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onOpenSidebar }) =
         {!hasMessages ? (
           /* Onboarding state */
           <div className="onboarding-wrap">
-            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.875rem" }}>
+            <div style={{ textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
               <div style={{
-                width: "64px", height: "64px", borderRadius: "20px",
-                background: "linear-gradient(135deg, var(--primary), #a855f7)",
+                width: "48px", height: "48px", borderRadius: "8px",
+                background: "var(--primary)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                boxShadow: "0 8px 32px rgba(99,102,241,0.3)",
+                marginBottom: "0.5rem",
               }}>
-                <Sparkles size={28} color="#fff" />
+                <Sparkles size={22} color="#fff" />
               </div>
               <div>
                 <h2 style={{
-                  fontSize: "clamp(1.375rem, 3vw, 1.875rem)",
-                  fontWeight: 800,
-                  background: "linear-gradient(90deg, var(--primary), var(--secondary))",
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text",
-                  marginBottom: "0.5rem",
+                  fontSize: "1.35rem",
+                  fontWeight: 700,
+                  color: "var(--text)",
+                  marginBottom: "0.375rem",
                 }}>
-                  Olá! Eu sou o Orion AI
+                  Orion AI
                 </h2>
-                <p style={{ fontSize: "0.875rem", color: "#94a3b8", maxWidth: "380px", lineHeight: 1.6 }}>
-                  Seu assistente virtual avançado. Pronto para ajudar com programação, estudos, conteúdo e muito mais.
+                <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", maxWidth: "340px", lineHeight: 1.5 }}>
+                  Assistente virtual para estudos, programação, conteúdo e tarefas.
                 </p>
               </div>
             </div>
@@ -157,30 +151,27 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onOpenSidebar }) =
                   onClick={() => sendMessage(card.prompt)}
                   style={{
                     display: "flex", flexDirection: "column", alignItems: "flex-start",
-                    gap: "0.375rem", padding: "1rem",
-                    background: "var(--card-bg)", border: "1px solid var(--card-border)",
-                    borderRadius: "1rem", cursor: "pointer", textAlign: "left",
-                    transition: "border-color 0.2s, transform 0.15s, box-shadow 0.2s",
-                    backdropFilter: "blur(12px)",
+                    gap: "0.25rem", padding: "0.875rem",
+                    background: "var(--bg-subtle)", border: "1px solid var(--border)",
+                    borderRadius: "6px", cursor: "pointer", textAlign: "left",
+                    transition: "border-color 0.15s, background 0.15s",
                   }}
                   onMouseEnter={e => {
-                    e.currentTarget.style.borderColor = "var(--primary)";
-                    e.currentTarget.style.transform = "translateY(-2px)";
-                    e.currentTarget.style.boxShadow = "0 6px 24px rgba(99,102,241,0.15)";
+                    e.currentTarget.style.borderColor = "var(--text-muted)";
+                    e.currentTarget.style.background = "var(--bg)";
                   }}
                   onMouseLeave={e => {
-                    e.currentTarget.style.borderColor = "var(--card-border)";
-                    e.currentTarget.style.transform = "translateY(0)";
-                    e.currentTarget.style.boxShadow = "none";
+                    e.currentTarget.style.borderColor = "var(--border)";
+                    e.currentTarget.style.background = "var(--bg-subtle)";
                   }}
                 >
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", marginBottom: "0.15rem" }}>
                     {card.icon}
-                    <span style={{ fontWeight: 600, fontSize: "0.875rem", color: "var(--foreground)" }}>
+                    <span style={{ fontWeight: 600, fontSize: "0.825rem", color: "var(--text)" }}>
                       {card.title}
                     </span>
                   </div>
-                  <span style={{ fontSize: "0.775rem", color: "#94a3b8", lineHeight: 1.4 }}>
+                  <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", lineHeight: 1.4 }}>
                     {card.desc}
                   </span>
                 </button>
@@ -203,8 +194,8 @@ export const ChatContainer: React.FC<ChatContainerProps> = ({ onOpenSidebar }) =
       <footer className="chat-footer">
         <div className="chat-footer-inner">
           <ChatInput onSendMessage={sendMessage} disabled={isResponding} />
-          <p style={{ fontSize: "0.7rem", textAlign: "center", color: "#94a3b8" }}>
-            Orion AI pode cometer erros. Verifique informações importantes.
+          <p style={{ fontSize: "0.6875rem", textAlign: "center", color: "var(--text-muted)", marginTop: "0.5rem" }}>
+            Orion AI pode apresentar imprecisões.
           </p>
         </div>
       </footer>
