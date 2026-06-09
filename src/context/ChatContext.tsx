@@ -317,7 +317,15 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
               if (dataStr === "[DONE]") continue;
               try {
                 const parsed = JSON.parse(dataStr);
-                const text = parsed.text || "";
+
+                // Support Azure OpenAI SSE format: choices[0].delta.content
+                // AND legacy mock format: { text: "..." }
+                const azureText = parsed.choices?.[0]?.delta?.content ?? "";
+                const mockText = parsed.text ?? "";
+                const text = azureText || mockText;
+
+                if (!text) continue; // skip empty/filter chunks
+
                 aiMessageContent += text;
 
                 // Stream updates to state
@@ -341,27 +349,7 @@ export const ChatProvider: React.FC<{ children: React.ReactNode }> = ({ children
                   return updated;
                 });
               } catch (e) {
-                // Not JSON, append directly
-                aiMessageContent += dataStr;
-                setConversations((prev) => {
-                  const updated = [...prev];
-                  const idx = updated.findIndex((c) => c.id === currentConvId);
-                  if (idx !== -1) {
-                    const messages = [...updated[idx].messages];
-                    const aiMsgIdx = messages.findIndex((m) => m.id === aiMessageId);
-                    if (aiMsgIdx !== -1) {
-                      messages[aiMsgIdx] = {
-                        ...messages[aiMsgIdx],
-                        content: aiMessageContent,
-                      };
-                    }
-                    updated[idx] = {
-                      ...updated[idx],
-                      messages,
-                    };
-                  }
-                  return updated;
-                });
+                // Not JSON — skip silently
               }
             }
           }
