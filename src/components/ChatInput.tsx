@@ -11,7 +11,6 @@ interface ChatInputProps {
 interface AttachedFile {
   name: string;
   size: string;
-  type: string;
 }
 
 export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled }) => {
@@ -20,32 +19,24 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled })
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Auto resize textarea as text changes
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = "40px";
       textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 160)}px`;
     }
   }, [content]);
 
   const handleSend = () => {
-    if (!content.trim() && attachedFiles.length === 0) return;
-    
-    // Prepare attachments indicator message if any file exists
-    let finalContent = content;
+    const trimmed = content.trim();
+    if (!trimmed && attachedFiles.length === 0) return;
+    let finalContent = trimmed;
     if (attachedFiles.length > 0) {
-      const filesDesc = attachedFiles.map(f => `📄 [Arquivo Anexado: ${f.name} (${f.size})]`).join("\n");
-      finalContent = `${filesDesc}\n\n${content}`;
+      const filesDesc = attachedFiles.map(f => `📄 [Arquivo: ${f.name} (${f.size})]`).join("\n");
+      finalContent = `${filesDesc}\n\n${trimmed}`;
     }
-
     onSendMessage(finalContent);
     setContent("");
     setAttachedFiles([]);
-    
-    // Reset heights
-    if (textareaRef.current) {
-      textareaRef.current.style.height = "auto";
-    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -57,48 +48,37 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled })
 
   const handleFileAttach = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    // Simulate attachment (PDF, DOCX, TXT)
-    const newAttachments: AttachedFile[] = [];
-    for (let i = 0; i < files.length; i++) {
-      const file = files[i];
-      const sizeMB = (file.size / (1024 * 1024)).toFixed(2);
-      newAttachments.push({
-        name: file.name,
-        size: `${sizeMB} MB`,
-        type: file.type || "text/plain",
-      });
-    }
-
-    setAttachedFiles([...attachedFiles, ...newAttachments]);
-    // Clear value to allow same file uploading
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
+    if (!files) return;
+    const newFiles: AttachedFile[] = Array.from(files).map(f => ({
+      name: f.name,
+      size: `${(f.size / (1024 * 1024)).toFixed(2)} MB`,
+    }));
+    setAttachedFiles(prev => [...prev, ...newFiles]);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const removeAttachment = (idx: number) => {
-    setAttachedFiles(attachedFiles.filter((_, i) => i !== idx));
-  };
+  const canSend = (content.trim().length > 0 || attachedFiles.length > 0) && !disabled;
 
   return (
-    <div className="w-full flex flex-col space-y-2">
-      {/* File Upload Previews */}
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", width: "100%" }}>
+      {/* Attached files */}
       {attachedFiles.length > 0 && (
-        <div className="flex flex-wrap gap-2 px-2">
+        <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
           {attachedFiles.map((file, idx) => (
-            <div 
-              key={idx} 
-              className="flex items-center space-x-2 py-1 px-2.5 bg-slate-200/60 dark:bg-slate-800 border border-slate-300 dark:border-slate-700/60 rounded-xl text-xs text-foreground animate-in slide-in-from-bottom-2 duration-150"
-            >
-              <FileText size={14} className="text-primary" />
-              <span className="truncate max-w-[150px] font-medium">{file.name}</span>
-              <span className="text-[10px] text-slate-500 dark:text-slate-400">({file.size})</span>
-              <button 
-                onClick={() => removeAttachment(idx)}
-                className="p-0.5 rounded hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
-                title="Remover anexo"
+            <div key={idx} style={{
+              display: "flex", alignItems: "center", gap: "0.375rem",
+              padding: "0.25rem 0.625rem",
+              background: "var(--card-bg)", border: "1px solid var(--card-border)",
+              borderRadius: "0.625rem", fontSize: "0.75rem", color: "var(--foreground)",
+            }}>
+              <FileText size={13} style={{ color: "var(--primary)", flexShrink: 0 }} />
+              <span style={{ maxWidth: "140px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {file.name}
+              </span>
+              <span style={{ color: "#94a3b8", fontSize: "0.7rem" }}>({file.size})</span>
+              <button
+                onClick={() => setAttachedFiles(prev => prev.filter((_, i) => i !== idx))}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "#94a3b8", padding: "0", lineHeight: 1 }}
               >
                 <X size={12} />
               </button>
@@ -107,48 +87,63 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSendMessage, disabled })
         </div>
       )}
 
-      {/* Input container */}
-      <div className="relative flex items-end p-2 border border-input-border bg-input-bg dark:bg-slate-900/80 backdrop-blur-md rounded-2xl shadow-inner focus-within:ring-2 focus-within:ring-primary/40 focus-within:border-primary transition-all duration-200">
-        {/* File attachment button */}
+      {/* Input box */}
+      <div className="input-box">
+        {/* Attach button */}
         <button
           onClick={() => fileInputRef.current?.click()}
           disabled={disabled}
-          className="p-2 rounded-xl text-slate-400 hover:text-primary hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all shrink-0 self-center"
-          title="Anexar arquivo (PDF, DOCX, TXT)"
+          title="Anexar arquivo"
+          style={{
+            background: "none", border: "none", cursor: disabled ? "not-allowed" : "pointer",
+            color: "#94a3b8", padding: "0.25rem", borderRadius: "0.5rem",
+            transition: "color 0.15s", flexShrink: 0, alignSelf: "flex-end",
+            marginBottom: "0.1rem",
+          }}
+          onMouseEnter={e => { if (!disabled) e.currentTarget.style.color = "var(--primary)"; }}
+          onMouseLeave={e => { e.currentTarget.style.color = "#94a3b8"; }}
         >
           <Paperclip size={18} />
         </button>
-        <input 
-          type="file" 
+        <input
+          type="file"
           ref={fileInputRef}
           onChange={handleFileAttach}
           multiple
-          accept=".pdf,.docx,.txt,text/plain,application/pdf"
-          className="hidden" 
+          accept=".pdf,.docx,.txt"
+          style={{ display: "none" }}
         />
 
-        {/* Input Text Area */}
+        {/* Textarea */}
         <textarea
           ref={textareaRef}
+          className="input-textarea"
           value={content}
-          onChange={(e) => setContent(e.target.value)}
+          onChange={e => setContent(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder={disabled ? "Orion AI está digitando..." : "Pergunte algo para Orion AI... (Shift+Enter para nova linha)"}
-          rows={1}
           disabled={disabled}
-          className="flex-1 bg-transparent border-0 outline-none resize-none px-3 py-2 text-sm max-h-40 min-h-[38px] text-foreground focus:ring-0 focus:outline-none"
+          placeholder={disabled ? "Orion AI está respondendo..." : "Pergunte algo... (Shift+Enter para nova linha)"}
+          rows={1}
         />
 
-        {/* Send Button */}
+        {/* Send button */}
         <button
           onClick={handleSend}
-          disabled={disabled || (!content.trim() && attachedFiles.length === 0)}
-          className={`p-2.5 rounded-xl transition-all shadow-md shrink-0 self-center ${
-            content.trim() || attachedFiles.length > 0
-              ? "bg-primary hover:bg-primary-hover text-white shadow-primary/20 hover:scale-105"
-              : "bg-slate-300 dark:bg-slate-800 text-slate-400 cursor-not-allowed shadow-none"
-          }`}
-          title="Enviar mensagem"
+          disabled={!canSend}
+          title="Enviar"
+          style={{
+            background: canSend ? "var(--primary)" : "rgba(148,163,184,0.15)",
+            border: "none",
+            borderRadius: "0.625rem",
+            padding: "0.5rem",
+            cursor: canSend ? "pointer" : "not-allowed",
+            color: canSend ? "#fff" : "#94a3b8",
+            transition: "background 0.2s, transform 0.15s",
+            flexShrink: 0, alignSelf: "flex-end",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}
+          onMouseEnter={e => { if (canSend) { e.currentTarget.style.background = "var(--primary-hover)"; e.currentTarget.style.transform = "scale(1.05)"; }}}
+          onMouseLeave={e => { if (canSend) { e.currentTarget.style.background = "var(--primary)"; e.currentTarget.style.transform = "scale(1)"; }}}
         >
           <Send size={16} />
         </button>

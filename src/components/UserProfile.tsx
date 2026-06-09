@@ -22,97 +22,136 @@ export const UserProfile: React.FC<UserProfileProps> = ({ onOpenSettings }) => {
   };
 
   const handleClear = () => {
-    if (confirm("Deseja apagar todo o histórico de conversas? Esta ação não pode ser desfeita.")) {
+    if (confirm("Deseja apagar todo o histórico de conversas?")) {
       clearAllConversations();
       setIsOpen(false);
     }
   };
 
+  const menuItemStyle: React.CSSProperties = {
+    display: "flex", alignItems: "center", gap: "0.625rem",
+    width: "100%", padding: "0.5rem 0.625rem",
+    background: "none", border: "none", borderRadius: "0.5rem",
+    cursor: "pointer", fontSize: "0.825rem", color: "var(--foreground)",
+    textAlign: "left", transition: "background 0.15s",
+  };
+
   return (
-    <div className="relative">
+    <div style={{ position: "relative" }}>
+      {/* Trigger button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center space-x-3 p-3 rounded-xl hover:bg-slate-200/50 dark:hover:bg-slate-800/50 transition-all text-left group"
-        aria-haspopup="true"
-        aria-expanded={isOpen}
+        style={{
+          display: "flex", alignItems: "center", gap: "0.625rem",
+          width: "100%", padding: "0.5rem 0.625rem",
+          background: "none", border: "none", borderRadius: "0.75rem",
+          cursor: "pointer", transition: "background 0.15s",
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = "rgba(148,163,184,0.08)"}
+        onMouseLeave={e => e.currentTarget.style.background = "none"}
       >
-        <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-secondary flex items-center justify-center text-white font-semibold shadow-md shrink-0">
-          {userProfile.avatar ? (
-            <img src={userProfile.avatar} alt={userProfile.name} className="w-full h-full rounded-full object-cover" />
-          ) : (
-            userProfile.name.charAt(0).toUpperCase()
-          )}
+        <div style={{
+          width: "34px", height: "34px", borderRadius: "10px", flexShrink: 0,
+          background: "linear-gradient(135deg, var(--primary), var(--secondary))",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          color: "#fff", fontWeight: 700, fontSize: "0.875rem",
+        }}>
+          {userProfile.name.charAt(0).toUpperCase()}
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm font-medium truncate group-hover:text-primary transition-colors">
+        <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
+          <p style={{ fontWeight: 600, fontSize: "0.8rem", color: "var(--foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {userProfile.name}
           </p>
-          <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+          <p style={{ fontSize: "0.7rem", color: "#94a3b8", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {userProfile.email}
           </p>
         </div>
       </button>
 
+      {/* Popup menu */}
       {isOpen && (
         <>
-          {/* Overlay to close */}
-          <div className="fixed inset-0 z-10" onClick={() => setIsOpen(false)} />
-          
-          <div className="absolute bottom-14 left-0 w-72 glass-panel rounded-2xl p-4 shadow-xl z-20 animate-in fade-in slide-in-from-bottom-2 duration-200">
+          <div style={{ position: "fixed", inset: 0, zIndex: 10 }} onClick={() => setIsOpen(false)} />
+          <div style={{
+            position: "absolute", bottom: "calc(100% + 8px)", left: 0, right: 0,
+            zIndex: 50,
+            background: "var(--card-bg)", backdropFilter: "blur(16px)",
+            border: "1px solid var(--card-border)",
+            borderRadius: "1rem", padding: "0.625rem",
+            boxShadow: "0 -4px 32px rgba(0,0,0,0.15)",
+          }}>
             {isEditing ? (
-              <div className="space-y-3">
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
                 <div>
-                  <label className="text-xs text-slate-400 font-medium block mb-1">Nome</label>
+                  <label style={{ fontSize: "0.7rem", color: "#94a3b8", display: "block", marginBottom: "0.25rem", fontWeight: 600 }}>Nome</label>
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full text-sm bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+                    onChange={e => setName(e.target.value)}
+                    style={{
+                      width: "100%", padding: "0.5rem 0.625rem",
+                      background: "rgba(0,0,0,0.08)", border: "1px solid var(--card-border)",
+                      borderRadius: "0.5rem", fontSize: "0.825rem", color: "var(--foreground)",
+                      outline: "none",
+                    }}
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-slate-400 font-medium block mb-1">E-mail</label>
+                  <label style={{ fontSize: "0.7rem", color: "#94a3b8", display: "block", marginBottom: "0.25rem", fontWeight: 600 }}>E-mail</label>
                   <input
                     type="email"
                     value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full text-sm bg-slate-100 dark:bg-slate-900 border border-slate-300 dark:border-slate-800 rounded-lg p-2 focus:outline-none focus:ring-1 focus:ring-primary text-foreground"
+                    onChange={e => setEmail(e.target.value)}
+                    style={{
+                      width: "100%", padding: "0.5rem 0.625rem",
+                      background: "rgba(0,0,0,0.08)", border: "1px solid var(--card-border)",
+                      borderRadius: "0.5rem", fontSize: "0.825rem", color: "var(--foreground)",
+                      outline: "none",
+                    }}
                   />
                 </div>
                 <button
                   onClick={handleSave}
-                  className="w-full flex items-center justify-center space-x-2 bg-primary hover:bg-primary-hover text-white rounded-lg p-2 text-sm font-medium shadow-sm transition-all"
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem",
+                    padding: "0.5rem", background: "var(--primary)", color: "#fff",
+                    border: "none", borderRadius: "0.5rem", cursor: "pointer",
+                    fontSize: "0.825rem", fontWeight: 600,
+                  }}
                 >
-                  <Check size={16} />
-                  <span>Salvar Alterações</span>
+                  <Check size={14} />
+                  Salvar
                 </button>
               </div>
             ) : (
-              <div className="space-y-2">
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.125rem" }}>
                 <button
+                  style={menuItemStyle}
                   onClick={() => setIsEditing(true)}
-                  className="w-full flex items-center space-x-3 p-2.5 rounded-lg text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(148,163,184,0.1)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "none"}
                 >
-                  <User size={16} className="text-slate-400" />
-                  <span>Editar Perfil</span>
+                  <User size={15} style={{ color: "#94a3b8" }} />
+                  Editar Perfil
                 </button>
                 <button
-                  onClick={() => {
-                    onOpenSettings();
-                    setIsOpen(false);
-                  }}
-                  className="w-full flex items-center space-x-3 p-2.5 rounded-lg text-sm text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/60 transition-colors"
+                  style={menuItemStyle}
+                  onClick={() => { onOpenSettings(); setIsOpen(false); }}
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(148,163,184,0.1)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "none"}
                 >
-                  <SettingsIcon size={16} className="text-slate-400" />
-                  <span>Configurações do Orion</span>
+                  <SettingsIcon size={15} style={{ color: "#94a3b8" }} />
+                  Configurações
                 </button>
-                <div className="border-t border-slate-200 dark:border-slate-800 my-2" />
+                <div style={{ borderTop: "1px solid var(--card-border)", margin: "0.25rem 0" }} />
                 <button
+                  style={{ ...menuItemStyle, color: "#ef4444" }}
                   onClick={handleClear}
-                  className="w-full flex items-center space-x-3 p-2.5 rounded-lg text-sm text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors"
+                  onMouseEnter={e => e.currentTarget.style.background = "rgba(239,68,68,0.08)"}
+                  onMouseLeave={e => e.currentTarget.style.background = "none"}
                 >
-                  <LogOut size={16} className="text-red-400" />
-                  <span>Limpar Conversas</span>
+                  <LogOut size={15} style={{ color: "#ef4444" }} />
+                  Limpar Conversas
                 </button>
               </div>
             )}

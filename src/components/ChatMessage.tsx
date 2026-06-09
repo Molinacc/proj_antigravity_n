@@ -21,94 +21,114 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
   };
 
   return (
-    <div
-      className={`flex w-full space-x-3 md:space-x-4 py-4 ${
-        isAi ? "justify-start" : "justify-end flex-row-reverse space-x-reverse"
-      }`}
-    >
+    <div style={{
+      display: "flex",
+      flexDirection: isAi ? "row" : "row-reverse",
+      gap: "0.625rem",
+      width: "100%",
+      padding: "0.25rem 0",
+      alignItems: "flex-start",
+    }}>
       {/* Avatar */}
-      <div
-        className={`w-9 h-9 rounded-xl flex items-center justify-center text-white font-bold shrink-0 shadow-md ${
-          isAi
-            ? "bg-gradient-to-br from-primary to-purple-600 animate-pulse"
-            : "bg-gradient-to-tr from-slate-600 to-slate-800"
-        }`}
-      >
-        {isAi ? <Sparkles size={16} /> : <User size={16} />}
+      <div style={{
+        width: "32px", height: "32px", borderRadius: "10px", flexShrink: 0,
+        background: isAi
+          ? "linear-gradient(135deg, var(--primary), #a855f7)"
+          : "linear-gradient(135deg, #475569, #1e293b)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        marginTop: "0.25rem",
+      }}>
+        {isAi ? <Sparkles size={14} color="#fff" /> : <User size={14} color="#fff" />}
       </div>
 
-      {/* Bubble Wrapper */}
-      <div className="flex flex-col max-w-[85%] md:max-w-[75%] space-y-1">
-        {/* Header (Role + Timestamp) */}
-        <div
-          className={`flex items-center space-x-2 text-[10px] text-slate-500 dark:text-slate-400 px-1 ${
-            isAi ? "justify-start" : "justify-end"
-          }`}
-        >
-          <span className="font-semibold uppercase tracking-wide">
-            {isAi ? "Orion AI" : "Você"}
-          </span>
-          <span>•</span>
+      {/* Bubble column */}
+      <div style={{
+        display: "flex", flexDirection: "column",
+        maxWidth: "min(80%, 560px)",
+        gap: "0.25rem",
+        alignItems: isAi ? "flex-start" : "flex-end",
+      }}>
+        {/* Meta */}
+        <div style={{
+          display: "flex", gap: "0.375rem", alignItems: "center",
+          fontSize: "0.7rem", color: "#94a3b8",
+          flexDirection: isAi ? "row" : "row-reverse",
+        }}>
+          <span style={{ fontWeight: 600 }}>{isAi ? "Orion AI" : "Você"}</span>
+          <span>·</span>
           <span>{message.timestamp}</span>
         </div>
 
-        {/* Message Bubble */}
+        {/* Bubble */}
         <div
-          className={`glass-panel rounded-2xl px-4 py-3 text-sm shadow-sm leading-relaxed relative group transition-all duration-200 border ${
-            isAi
-              ? "bg-chat-bubble-ai text-chat-bubble-ai-text border-slate-200/50 dark:border-slate-800/40 rounded-tl-sm"
-              : "bg-chat-bubble-user text-white border-primary/20 rounded-tr-sm"
-          }`}
+          className={isAi ? "bubble-ai" : "bubble-user"}
+          style={{
+            padding: "0.625rem 0.875rem",
+            fontSize: "0.875rem",
+            lineHeight: 1.65,
+            position: "relative",
+            wordBreak: "break-word",
+            overflowWrap: "anywhere",
+          }}
         >
-          {/* Markdown Content */}
-          <div className="prose prose-slate dark:prose-invert max-w-none break-words">
+          <div style={{ maxWidth: "100%" }}>
             <ReactMarkdown
               remarkPlugins={[remarkGfm]}
               components={{
-                p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
-                ul: ({ children }) => <ul className="list-disc pl-5 mb-2">{children}</ul>,
-                ol: ({ children }) => <ol className="list-decimal pl-5 mb-2">{children}</ol>,
-                li: ({ children }) => <li className="mb-1">{children}</li>,
-                h1: ({ children }) => <h1 className="text-base font-bold my-2 text-primary">{children}</h1>,
-                h2: ({ children }) => <h2 className="text-sm font-bold my-1.5 text-secondary">{children}</h2>,
-                h3: ({ children }) => <h3 className="text-xs font-bold my-1">{children}</h3>,
+                p: ({ children }) => <p style={{ marginBottom: "0.5rem" }}>{children}</p>,
+                ul: ({ children }) => <ul style={{ paddingLeft: "1.25rem", marginBottom: "0.5rem" }}>{children}</ul>,
+                ol: ({ children }) => <ol style={{ paddingLeft: "1.25rem", marginBottom: "0.5rem" }}>{children}</ol>,
+                li: ({ children }) => <li style={{ marginBottom: "0.2rem" }}>{children}</li>,
+                h1: ({ children }) => <h1 style={{ fontSize: "1rem", fontWeight: 700, marginBottom: "0.5rem", color: "var(--primary)" }}>{children}</h1>,
+                h2: ({ children }) => <h2 style={{ fontSize: "0.9rem", fontWeight: 700, marginBottom: "0.375rem" }}>{children}</h2>,
+                h3: ({ children }) => <h3 style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.25rem" }}>{children}</h3>,
                 a: ({ href, children }) => (
-                  <a
-                    href={href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary hover:underline underline-offset-2 break-all font-medium"
-                  >
+                  <a href={href} target="_blank" rel="noopener noreferrer"
+                    style={{ color: "var(--primary)", textDecoration: "underline", wordBreak: "break-all" }}>
                     {children}
                   </a>
                 ),
-                code: ({ children }) => (
-                  <code className="bg-slate-200 dark:bg-slate-900 px-1.5 py-0.5 rounded text-xs text-rose-500 dark:text-rose-400 font-mono">
-                    {children}
-                  </code>
-                ),
-                pre: ({ children }) => (
-                  <pre className="overflow-x-auto my-3 p-4 rounded-xl bg-slate-950 text-slate-100 border border-slate-800 relative font-mono text-xs max-w-full">
-                    {children}
-                  </pre>
-                ),
+                code: ({ children, className }) => {
+                  const isBlock = className?.includes("language-");
+                  if (isBlock) return <code>{children}</code>;
+                  return (
+                    <code style={{
+                      background: "rgba(0,0,0,0.25)", padding: "0.15rem 0.35rem",
+                      borderRadius: "0.3rem", fontSize: "0.82em",
+                      fontFamily: "ui-monospace, monospace", color: isAi ? "#f87171" : "#fde68a",
+                    }}>
+                      {children}
+                    </code>
+                  );
+                },
+                strong: ({ children }) => <strong style={{ fontWeight: 700 }}>{children}</strong>,
               }}
             >
               {message.content}
             </ReactMarkdown>
           </div>
-
-          {/* Copy message button */}
-          <button
-            onClick={handleCopy}
-            className={`absolute -bottom-7 p-1 rounded-md opacity-0 group-hover:opacity-100 text-slate-400 hover:text-foreground dark:hover:text-white transition-opacity ${
-              isAi ? "left-1" : "right-1"
-            }`}
-            title="Copiar mensagem"
-          >
-            {copied ? <Check size={13} className="text-emerald-500" /> : <Copy size={13} />}
-          </button>
         </div>
+
+        {/* Copy button */}
+        <button
+          onClick={handleCopy}
+          title="Copiar mensagem"
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: "#94a3b8", fontSize: "0.7rem",
+            display: "flex", alignItems: "center", gap: "0.25rem",
+            padding: "0.15rem 0.375rem", borderRadius: "0.375rem",
+            transition: "color 0.15s",
+            alignSelf: isAi ? "flex-start" : "flex-end",
+          }}
+          onMouseEnter={e => e.currentTarget.style.color = "var(--foreground)"}
+          onMouseLeave={e => e.currentTarget.style.color = "#94a3b8"}
+        >
+          {copied
+            ? <><Check size={12} style={{ color: "#10b981" }} /><span style={{ color: "#10b981" }}>Copiado!</span></>
+            : <><Copy size={12} /><span>Copiar</span></>
+          }
+        </button>
       </div>
     </div>
   );

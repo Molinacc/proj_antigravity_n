@@ -3,9 +3,9 @@
 import React, { useState } from "react";
 import { useChat, Conversation } from "@/context/ChatContext";
 import { UserProfile } from "./UserProfile";
-import { 
-  Plus, MessageSquare, Trash2, Library, BookOpen, 
-  Code, PenTool, ClipboardList, PanelLeftClose, PanelLeft
+import {
+  Plus, MessageSquare, Trash2, Library, BookOpen,
+  Code, PenTool, ClipboardList, X, Menu
 } from "lucide-react";
 
 interface SidebarHistoryProps {
@@ -14,160 +14,200 @@ interface SidebarHistoryProps {
   setIsSidebarOpen: (open: boolean) => void;
 }
 
-const CATEGORY_MAP = {
-  all: { label: "Todos", icon: <MessageSquare size={16} />, color: "text-slate-400" },
-  atendimento: { label: "Atendimento", icon: <Library size={16} />, color: "text-blue-400" },
-  estudos: { label: "Estudos", icon: <BookOpen size={16} />, color: "text-amber-400" },
-  programacao: { label: "Programação", icon: <Code size={16} />, color: "text-emerald-400" },
-  conteudo: { label: "Conteúdo", icon: <PenTool size={16} />, color: "text-pink-400" },
-  produtividade: { label: "Produtividade", icon: <ClipboardList size={16} />, color: "text-indigo-400" },
-};
+type Category = Conversation["category"];
 
-export const SidebarHistory: React.FC<SidebarHistoryProps> = ({ 
-  onOpenSettings, 
-  isSidebarOpen, 
-  setIsSidebarOpen 
+const CATEGORIES: { key: Category; label: string; icon: React.ReactNode; color: string }[] = [
+  { key: "all",          label: "Todos",        icon: <MessageSquare size={14} />, color: "#94a3b8" },
+  { key: "atendimento",  label: "Atendimento",  icon: <Library size={14} />,       color: "#60a5fa" },
+  { key: "estudos",      label: "Estudos",      icon: <BookOpen size={14} />,      color: "#fbbf24" },
+  { key: "programacao",  label: "Programação",  icon: <Code size={14} />,          color: "#34d399" },
+  { key: "conteudo",     label: "Conteúdo",     icon: <PenTool size={14} />,       color: "#f472b6" },
+  { key: "produtividade",label: "Produtividade",icon: <ClipboardList size={14} />, color: "#818cf8" },
+];
+
+export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
+  onOpenSettings,
+  isSidebarOpen,
+  setIsSidebarOpen,
 }) => {
-  const { 
-    conversations, 
-    activeConversationId, 
-    setActiveConversationId, 
-    createConversation, 
-    deleteConversation 
+  const {
+    conversations,
+    activeConversationId,
+    setActiveConversationId,
+    createConversation,
+    deleteConversation,
   } = useChat();
-  
-  const [selectedFilter, setSelectedFilter] = useState<Conversation["category"]>("all");
 
-  const filteredConversations = conversations.filter(
-    (c) => selectedFilter === "all" || c.category === selectedFilter
-  );
+  const [selectedFilter, setSelectedFilter] = useState<Category>("all");
+
+  const filtered = selectedFilter === "all"
+    ? conversations
+    : conversations.filter(c => c.category === selectedFilter);
+
+  const handleSelect = (id: string) => {
+    setActiveConversationId(id);
+    setIsSidebarOpen(false);
+  };
+
+  const handleNew = () => {
+    createConversation(selectedFilter);
+    setIsSidebarOpen(false);
+  };
 
   return (
     <>
-      {/* Mobile Toggle Button (when sidebar is closed) */}
-      {!isSidebarOpen && (
-        <button
-          onClick={() => setIsSidebarOpen(true)}
-          className="fixed top-4 left-4 z-40 p-2.5 rounded-xl glass-panel shadow-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-foreground md:hidden transition-all duration-200"
-          aria-label="Abrir Menu"
-        >
-          <PanelLeft size={20} />
-        </button>
-      )}
-
-      {/* Backdrop for mobile */}
+      {/* Mobile backdrop */}
       {isSidebarOpen && (
-        <div 
+        <div
+          className="sidebar-backdrop"
+          style={{ display: "block" }}
           onClick={() => setIsSidebarOpen(false)}
-          className="fixed inset-0 bg-slate-950/40 backdrop-blur-sm z-30 md:hidden transition-opacity duration-300"
         />
       )}
 
-      {/* Sidebar history drawer */}
-      <aside
-        className={`fixed top-0 bottom-0 left-0 z-40 w-72 glass-sidebar flex flex-col transition-transform duration-300 md:relative md:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        }`}
-      >
-        {/* Top Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800">
-          <div className="flex items-center space-x-2">
-            <span className="w-3 h-3 rounded-full bg-gradient-to-tr from-primary to-secondary animate-pulse" />
-            <span className="font-bold text-lg tracking-wide bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              Orion AI Hub
+      {/* Sidebar */}
+      <aside className={`sidebar${isSidebarOpen ? " open" : ""}`}>
+        {/* Top header */}
+        <div style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 1rem",
+          height: "56px",
+          minHeight: "56px",
+          borderBottom: "1px solid var(--sidebar-border)",
+          flexShrink: 0,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{
+              width: "10px", height: "10px", borderRadius: "50%",
+              background: "linear-gradient(135deg, var(--primary), var(--secondary))",
+              display: "inline-block",
+            }} />
+            <span style={{
+              fontWeight: 700, fontSize: "1rem",
+              background: "linear-gradient(90deg, var(--primary), var(--secondary))",
+              WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+              backgroundClip: "text",
+            }}>
+              Orion AI
             </span>
           </div>
-          <button 
-            onClick={() => setIsSidebarOpen(false)}
-            className="p-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-400 hover:text-foreground md:hidden transition-colors"
-          >
-            <PanelLeftClose size={18} />
-          </button>
-        </div>
-
-        {/* New Chat Button */}
-        <div className="p-4">
           <button
-            onClick={() => {
-              createConversation(selectedFilter);
-              // close on mobile
-              if (window.innerWidth < 768) {
-                setIsSidebarOpen(false);
-              }
+            onClick={() => setIsSidebarOpen(false)}
+            style={{
+              display: "none",
+              padding: "0.375rem",
+              borderRadius: "0.5rem",
+              border: "none",
+              background: "transparent",
+              cursor: "pointer",
+              color: "var(--foreground)",
             }}
-            className="w-full flex items-center justify-center space-x-2 p-3 bg-primary hover:bg-primary-hover text-white rounded-xl shadow-md shadow-primary/20 hover:shadow-lg hover:shadow-primary/30 transition-all font-semibold text-sm group"
+            className="sidebar-close-btn"
+            aria-label="Fechar menu"
           >
-            <Plus size={18} className="group-hover:rotate-90 transition-transform duration-300" />
-            <span>Nova Conversa</span>
+            <X size={18} />
           </button>
         </div>
 
-        {/* Category Filters Bar */}
-        <div className="px-4 pb-2">
-          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-2">
-            Categorias de Foco
+        {/* New chat button */}
+        <div style={{ padding: "0.875rem 1rem 0.5rem", flexShrink: 0 }}>
+          <button
+            onClick={handleNew}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center",
+              gap: "0.5rem", width: "100%", padding: "0.625rem 1rem",
+              background: "var(--primary)", color: "#fff",
+              border: "none", borderRadius: "0.75rem",
+              fontWeight: 600, fontSize: "0.875rem", cursor: "pointer",
+              transition: "background 0.2s, transform 0.15s",
+              boxShadow: "0 2px 12px rgba(99,102,241,0.25)",
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "var(--primary-hover)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "var(--primary)")}
+          >
+            <Plus size={16} />
+            Nova Conversa
+          </button>
+        </div>
+
+        {/* Category filters */}
+        <div style={{ padding: "0 1rem 0.625rem", flexShrink: 0 }}>
+          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem" }}>
+            Categorias
           </p>
-          <div className="grid grid-cols-3 gap-1.5">
-            {Object.entries(CATEGORY_MAP).map(([key, cat]) => (
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "0.375rem" }}>
+            {CATEGORIES.map(cat => (
               <button
-                key={key}
-                onClick={() => setSelectedFilter(key as Conversation["category"])}
-                className={`flex flex-col items-center justify-center p-2 rounded-lg border text-center transition-all ${
-                  selectedFilter === key
-                    ? "bg-slate-200/60 dark:bg-slate-800 border-primary/50 text-foreground"
-                    : "border-transparent text-slate-500 dark:text-slate-400 hover:bg-slate-200/30 dark:hover:bg-slate-800/30"
-                }`}
+                key={cat.key}
+                onClick={() => setSelectedFilter(cat.key)}
                 title={cat.label}
+                style={{
+                  display: "flex", flexDirection: "column", alignItems: "center",
+                  padding: "0.5rem 0.25rem", borderRadius: "0.625rem",
+                  border: selectedFilter === cat.key ? "1px solid var(--primary)" : "1px solid transparent",
+                  background: selectedFilter === cat.key ? "rgba(99,102,241,0.1)" : "transparent",
+                  cursor: "pointer", transition: "all 0.15s",
+                  color: selectedFilter === cat.key ? "var(--primary)" : "#94a3b8",
+                  gap: "0.25rem",
+                }}
               >
-                <span className={`${cat.color} mb-1`}>{cat.icon}</span>
-                <span className="text-[10px] truncate max-w-full font-medium">{cat.label}</span>
+                <span style={{ color: cat.color }}>{cat.icon}</span>
+                <span style={{ fontSize: "0.6rem", fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{cat.label}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Conversation list */}
-        <div className="flex-1 overflow-y-auto px-4 py-2 space-y-1">
-          <p className="text-xs font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-1.5">
-            Histórico Recente
+        <div style={{ flex: 1, overflowY: "auto", overflowX: "hidden", padding: "0 0.75rem" }}>
+          <p style={{ fontSize: "0.65rem", fontWeight: 700, color: "#94a3b8", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.5rem", paddingLeft: "0.25rem" }}>
+            Histórico
           </p>
-          {filteredConversations.length === 0 ? (
-            <div className="text-center py-8 text-xs text-slate-400 dark:text-slate-500">
-              Nenhuma conversa nesta categoria.
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: "center", padding: "2rem 0", fontSize: "0.75rem", color: "#94a3b8" }}>
+              Nenhuma conversa ainda.
             </div>
           ) : (
-            filteredConversations.map((conv) => {
+            filtered.map(conv => {
+              const cat = CATEGORIES.find(c => c.key === conv.category) || CATEGORIES[0];
               const isActive = conv.id === activeConversationId;
-              const catInfo = CATEGORY_MAP[conv.category] || CATEGORY_MAP.all;
               return (
                 <div
                   key={conv.id}
-                  className={`group relative flex items-center rounded-xl p-3 cursor-pointer text-sm font-medium transition-all ${
-                    isActive
-                      ? "bg-slate-200/50 dark:bg-slate-800/80 text-foreground"
-                      : "text-slate-600 dark:text-slate-300 hover:bg-slate-200/20 dark:hover:bg-slate-800/20"
-                  }`}
-                  onClick={() => {
-                    setActiveConversationId(conv.id);
-                    if (window.innerWidth < 768) {
-                      setIsSidebarOpen(false);
-                    }
+                  onClick={() => handleSelect(conv.id)}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "0.5rem",
+                    padding: "0.5rem 0.625rem", borderRadius: "0.625rem",
+                    cursor: "pointer", marginBottom: "0.25rem",
+                    background: isActive ? "rgba(99,102,241,0.12)" : "transparent",
+                    transition: "background 0.15s",
+                    position: "relative",
                   }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = "rgba(148,163,184,0.08)"; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = "transparent"; }}
+                  className="conv-item"
                 >
-                  <span className={`${catInfo.color} mr-2.5 shrink-0`}>
-                    {catInfo.icon}
+                  <span style={{ color: cat.color, flexShrink: 0 }}>{cat.icon}</span>
+                  <span style={{
+                    flex: 1, fontSize: "0.8rem", fontWeight: isActive ? 600 : 400,
+                    color: isActive ? "var(--primary)" : "var(--foreground)",
+                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                  }}>
+                    {conv.title}
                   </span>
-                  <span className="truncate flex-1 pr-6">{conv.title}</span>
-
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      deleteConversation(conv.id);
+                    onClick={e => { e.stopPropagation(); deleteConversation(conv.id); }}
+                    title="Excluir"
+                    style={{
+                      background: "none", border: "none", cursor: "pointer",
+                      color: "#94a3b8", padding: "0.2rem", borderRadius: "0.375rem",
+                      flexShrink: 0, opacity: 0, transition: "opacity 0.15s, color 0.15s",
                     }}
-                    className="absolute right-2.5 opacity-0 group-hover:opacity-100 p-1 rounded-md text-slate-400 hover:text-red-500 hover:bg-slate-300/30 dark:hover:bg-slate-900/40 transition-all"
-                    title="Excluir Conversa"
+                    className="delete-btn"
                   >
-                    <Trash2 size={14} />
+                    <Trash2 size={13} />
                   </button>
                 </div>
               );
@@ -175,11 +215,24 @@ export const SidebarHistory: React.FC<SidebarHistoryProps> = ({
           )}
         </div>
 
-        {/* User Profile / Settings Footer */}
-        <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-100/30 dark:bg-slate-950/20">
+        {/* User profile footer */}
+        <div style={{
+          padding: "0.75rem 1rem",
+          borderTop: "1px solid var(--sidebar-border)",
+          flexShrink: 0,
+        }}>
           <UserProfile onOpenSettings={onOpenSettings} />
         </div>
       </aside>
+
+      <style>{`
+        .sidebar-close-btn { display: none !important; }
+        @media (max-width: 767px) {
+          .sidebar-close-btn { display: flex !important; }
+        }
+        .conv-item:hover .delete-btn { opacity: 1 !important; }
+        .delete-btn:hover { color: #ef4444 !important; }
+      `}</style>
     </>
   );
 };
